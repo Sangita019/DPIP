@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "messages": [
+    "Sample screening history"
+  ],
+  "body": {
+    "leadId": "DEMO-001",
+    "leadPhase": "CBS_IMPLEMENTATION",
+    "dpipBypassed": false,
+    "status": "NO_MATCH",
+    "request": "{\"EIS_PAYLOAD\":{\"PAYLOAD\":{\"identifiers\":[{\"type\":\"PAN\",\"value\":\"DUMMY-PAN\"},{\"type\":\"MOBILE\",\"value\":\"XXXXXX1234\"},{\"type\":\"EMAIL\",\"value\":\"sample@example.invalid\"},{\"type\":\"PASSPORT\",\"value\":\"DUMMY-PASSPORT\"}]}}}",
+    "response": null,
+    "matchedParameters": [],
+    "retriggerAllowed": false,
+    "errorDescription": null,
+    "statusTimestamp": "2026-01-01T00:00:00"
+  }
+}
