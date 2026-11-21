@@ -1,47 +1,263 @@
-import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, SimpleChanges, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnChanges,
+  SimpleChanges,
+  inject,
+  DestroyRef
+} from '@angular/core';
+
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from
+  '@angular/material/progress-spinner';
+
 import { Subscription } from 'rxjs';
-import { DpipScreeningService } from './dpip-screening.service';
-import { DpipIdentifier, DpipResponse, readIdentifiers } from './dpip-screening.model';
-import { DpipStatus } from './dpip-screening.constants';
-@Component({selector:'app-dpip-screening', standalone:true, imports:[DatePipe], templateUrl:'./dpip-screening.component.html', styleUrls:['./dpip-screening.component.scss']})
-export class DpipScreeningComponent implements OnChanges, OnDestroy {
- @Input() leadId = '';
- @Input() phase = '';
- @Input() isEditable = false;
- @Input() refreshHistory: unknown;
- @Output() valueChange = new EventEmitter<{valid:boolean}>();
- private service = inject(DpipScreeningService);
- private pending?: Subscription;
- rows: DpipIdentifier[] = [];
- status = '';
- timestamp: string | null = null;
- error = '';
- loading = false;
- retriggerAllowed = false;
- ngOnChanges(changes: SimpleChanges) { if(changes['leadId'] || changes['phase'] || changes['refreshHistory']) this.load(false); }
- ngOnDestroy() { this.pending?.unsubscribe(); }
- reload() { if(!this.loading) this.load(false); }
- retry() { if(this.isEditable && this.retriggerAllowed && !this.loading) this.load(true); }
- private load(trigger: boolean) {
-  this.pending?.unsubscribe();
-  this.rows=[]; this.status=''; this.timestamp=null; this.error=''; this.retriggerAllowed=false; this.loading=false;
-  this.valueChange.emit({valid:false});
-  if(!this.leadId || !this.phase) return;
-  this.loading=true;
-  this.pending=(trigger ? this.service.trigger(this.leadId) : this.service.history(this.leadId,this.phase)).subscribe({
-   next: (res: DpipResponse) => {
-    this.loading=false;
-    if(!res.success || !res.body || res.body.dpipBypassed !== false || res.body.leadId !== this.leadId || res.body.leadPhase !== this.phase) { this.error='Screening unavailable for this lead and phase'; return; }
-    this.status=res.body.status;
-    this.timestamp=res.body.statusTimestamp;
-    this.retriggerAllowed=res.body.retriggerAllowed === true;
-    if(res.body.errorDescription) { this.error='Screening returned an error'; return; }
-    try { this.rows=readIdentifiers(res.body.request); } catch { this.error='Screening request unavailable or invalid'; return; }
-    // Provisional approval rule; confirm with workflow owner.
-    this.valueChange.emit({valid:this.status === DpipStatus.NO_MATCH});
-   },
-   error: () => { this.loading=false; this.error='Unable to retrieve screening'; }
-  });
- }
+import { takeUntilDestroyed } from
+  '@angular/core/rxjs-interop';
+
+import { NriLeadPhase } from
+  'src/app/nri/workflow/constants/lead.constants';
+
+import {
+  IDpipScreeningResponse,
+  ILeadDpipDto,
+  IDpipIdentifier,
+  IDpipRequest,
+  IDpipBlockValidity
+} from './dpip-screening.model';
+
+import {
+  DpipScreeningStatusEnum,
+  DpipIdentifierDisplayRecord
+} from './dpip-screening.constants';
+
+import { DpipScreeningService } from
+  './dpip-screening.service';
+
+@Component({
+  selector: 'app-dpip-screening',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatTableModule,
+    MatIconModule,
+    MatProgressSpinnerModule
+  ],
+  templateUrl: './dpip-screening.component.html',
+  styleUrl: './dpip-screening.component.scss'
+})
+export class DpipScreeningComponent implements OnChanges {
+
+  @Input() leadId?: string;
+  @Input() leadPhase?: NriLeadPhase;
+  @Input() isEditable = false;
+
+  @Output() valueChange =
+    new EventEmitter<IDpipBlockValidity>();
+
+  dpipDetails?: ILeadDpipDto;
+
+  identifiers: IDpipIdentifier[] = [];
+
+  displayedColumns: string[] = [
+    'serialNo',
+    'type',
+    'value'
+  ];
+
+  isLoading = false;
+  errorMessage = '';
+
+  readonly identifierDisplayRecord =
+    DpipIdentifierDisplayRecord;
+
+  readonly dpipStatusEnum =
+    DpipScreeningStatusEnum;
+
+  private destroyRef = inject(DestroyRef);
+  private activeRequest?: Subscription;
+
+  constructor(
+    private dpipScreeningService: DpipScreeningService
+  ) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes['leadId'] || changes['leadPhase']) {
+
+      this.activeRequest?.unsubscribe();
+      this.resetScreeningData();
+
+      if (this.leadId && this.leadPhase) {
+        this.getDpipScreeningHistory();
+      }
+    }
+  }
+
+  getDpipScreeningHistory(): void {
+
+    if (!this.leadId || !this.leadPhase) {
+      return;
+    }
+
+    this.activeRequest?.unsubscribe();
+    this.resetScreeningData();
+    this.isLoading = true;
+
+    this.activeRequest = this.dpipScreeningService
+      .getDpipScreeningHistory(
+        this.leadId,
+        this.leadPhase
+      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res: IDpipScreeningResponse) => {
+          this.processDpipResponse(res);
+        },
+        error: () => {
+          this.handleApiError(
+            'Unable to fetch DPIP screening history.'
+          );
+        }
+      });
+  }
+
+  triggerDpipScreening(): void {
+
+    if (!this.leadId || !this.canRetrigger) {
+      return;
+    }
+
+    this.activeRequest?.unsubscribe();
+    this.resetScreeningData();
+    this.isLoading = true;
+
+    this.activeRequest = this.dpipScreeningService
+      .triggerDpipScreening(this.leadId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res: IDpipScreeningResponse) => {
+          this.processDpipResponse(res);
+        },
+        error: () => {
+          this.handleApiError(
+            'Unable to trigger DPIP screening.'
+          );
+        }
+      });
+  }
+
+  private processDpipResponse(
+    res: IDpipScreeningResponse
+  ): void {
+
+    this.isLoading = false;
+
+    if (!res.success || !res.body) {
+      this.handleApiError(
+        res.messages?.join(', ') ||
+        'DPIP screening details are unavailable.'
+      );
+      return;
+    }
+
+    if (
+      res.body.leadId !== this.leadId ||
+      res.body.leadPhase !== this.leadPhase
+    ) {
+      this.handleApiError(
+        'DPIP screening details do not match the current lead and phase.'
+      );
+      return;
+    }
+
+    this.dpipDetails = res.body;
+
+    this.identifiers = this.parseIdentifiers(
+      this.dpipDetails.request
+    );
+
+    this.emitScreeningValidity();
+  }
+
+  private parseIdentifiers(
+    request: string | null
+  ): IDpipIdentifier[] {
+
+    if (!request) {
+      return [];
+    }
+
+    try {
+
+      const parsedRequest: IDpipRequest =
+        JSON.parse(request);
+
+      const identifiers =
+        parsedRequest?.EIS_PAYLOAD?.PAYLOAD?.identifiers;
+
+      if (!Array.isArray(identifiers)) {
+        return [];
+      }
+
+      return identifiers.filter(
+        item =>
+          item &&
+          typeof item.type === 'string' &&
+          typeof item.value === 'string'
+      );
+
+    } catch {
+      return [];
+    }
+  }
+
+  private emitScreeningValidity(): void {
+
+    // Provisional rule: confirm approval policy with the workflow owner.
+    const isValid =
+      this.dpipDetails?.dpipBypassed === false &&
+      this.dpipDetails?.status ===
+        DpipScreeningStatusEnum.NO_MATCH &&
+      !this.dpipDetails?.errorDescription;
+
+    this.valueChange.emit({
+      valid: isValid
+    });
+  }
+
+  private resetScreeningData(): void {
+
+    this.dpipDetails = undefined;
+    this.identifiers = [];
+    this.errorMessage = '';
+    this.isLoading = false;
+
+    this.valueChange.emit({
+      valid: false
+    });
+  }
+
+  private handleApiError(message: string): void {
+
+    this.resetScreeningData();
+    this.errorMessage = message;
+  }
+
+  get canRetrigger(): boolean {
+
+    return (
+      this.isEditable &&
+      !this.isLoading &&
+      this.dpipDetails?.dpipBypassed === false &&
+      this.dpipDetails?.retriggerAllowed === true
+    );
+  }
+
 }
