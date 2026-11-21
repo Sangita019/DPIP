@@ -1,11 +1,39 @@
-import { Injectable, InjectionToken, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { DpipResponse } from './dpip-screening.model';
-export const DPIP_ENDPOINTS = new InjectionToken<{ history: (id: string, phase: string) => string; trigger: (id: string) => string }>('DPIP_ENDPOINTS');
-@Injectable({providedIn: 'root'})
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import { BANK_ENDP } from
+  'src/app/constants/api.constants';
+
+import { NriLeadPhase } from
+  'src/app/nri/workflow/constants/lead.constants';
+
+import { IDpipScreeningResponse } from
+  './dpip-screening.model';
+
+@Injectable({
+  providedIn: 'root'
+})
 export class DpipScreeningService {
- private http = inject(HttpClient);
- private endpoints = inject(DPIP_ENDPOINTS);
- history(id: string, phase: string) { return this.http.get<DpipResponse>(this.endpoints.history(id, phase)); }
- trigger(id: string) { return this.http.get<DpipResponse>(this.endpoints.trigger(id)); }
+
+  constructor(private http: HttpClient) {}
+
+  getDpipScreeningHistory(
+    leadId: string,
+    leadPhase: NriLeadPhase
+  ): Observable<IDpipScreeningResponse> {
+
+    return this.http.get<IDpipScreeningResponse>(
+      BANK_ENDP.GET_DPIP(leadId, leadPhase)
+    );
+  }
+
+  triggerDpipScreening(
+    leadId: string
+  ): Observable<IDpipScreeningResponse> {
+
+    return this.http.get<IDpipScreeningResponse>(
+      BANK_ENDP.TRIGGER_DPIP(leadId)
+    );
+  }
 }
