@@ -16,7 +16,6 @@
     <div class="screening-status">
       @if (
         dpipDetails.status === dpipStatusEnum.NO_MATCH &&
-        !dpipDetails.dpipBypassed &&
         !dpipDetails.errorDescription
       ) {
         <div class="success-message">
