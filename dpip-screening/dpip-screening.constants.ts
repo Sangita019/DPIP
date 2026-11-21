@@ -1,1 +1,11 @@
-export enum DpipStatus { NO_MATCH='NO_MATCH', CLEARED='CLEARED', SUSPECT='SUSPECT', ALERT='ALERT', API_ERROR='API_ERROR' }
+export enum DpipScreeningStatusEnum {
+  NO_MATCH = 'NO_MATCH'
+}
+
+export const DpipIdentifierDisplayRecord:
+  Record<string, string> = {
+    PAN: 'PAN',
+    MOBILE: 'Mobile Number',
+    EMAIL: 'Email ID',
+    PASSPORT: 'Passport'
+};
