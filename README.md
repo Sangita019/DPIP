@@ -1,5 +1,7 @@
 # DPIP Screening Angular integration sample
 
-The component and service follow Steps 6 and 7 of the Angular implementation. Copy the six dpip-screening files into the existing Angular application's steps-shared folder and use the application's BANK_ENDP and NriLeadPhase definitions. The service calls the live backend with HttpClient; mock data is optional and not referenced by the component.
+Standalone implementation files for integration into an existing Angular application. Service uses live backend endpoints through the host application's `BANK_ENDP` and `NriLeadPhase` definitions. No mock dependency; no credentials or customer data.
 
-Use existing Name Screening when dpipBypassed is true; use DPIP when false. Unknown flag must block approval. See integration.md for parent integration and pending checks. No credentials or real customer data included. This reference requires the host Angular application and has not been compiled against it.
+**Screen display rule:** if `dpipBypassed === true`, display both existing Name Screening and DPIP Screening; if `false`, display DPIP only. Unknown flag means configuration unavailable. Existing Name Screening code should remain unchanged.
+
+The DPIP component accepts `leadId`, `leadPhase`, `isEditable`, and optional `refreshHistoryVersion` (CBS refresh). See [integration.md](integration.md) for parent component HTML/TS and approval caveats. Actual parent files are not present in this sample repository and are not modified. Backend status/approval semantics require confirmation; this reference has not been built against the host application.
