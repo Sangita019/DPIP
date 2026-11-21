@@ -1,16 +1,39 @@
-export interface DpipIdentifier { type: string; value: string; role?: string; }
-export interface DpipResult {
- leadId: string; leadPhase: string;
- dpipBypassed: boolean; status: string;
- request: string | null; response: string | null;
- matchedParameters: unknown[] | null;
- retriggerAllowed: boolean; errorDescription: string | null;
- statusTimestamp: string | null;
+import { NriLeadPhase } from
+  'src/app/nri/workflow/constants/lead.constants';
+
+export interface IDpipScreeningResponse {
+  body: ILeadDpipDto | null;
+  messages: string[];
+  success: boolean;
 }
-export interface DpipResponse { success: boolean; body: DpipResult | null; messages: string[]; }
-export function readIdentifiers(request: string | null): DpipIdentifier[] {
- if (!request) throw new Error('Missing request');
- const rows: unknown = JSON.parse(request)?.EIS_PAYLOAD?.PAYLOAD?.identifiers;
- if (!Array.isArray(rows) || !rows.length || !rows.every(r => r && typeof r.type === 'string' && typeof r.value === 'string')) throw new Error('Invalid identifiers');
- return rows;
+
+export interface ILeadDpipDto {
+  dpipBypassed: boolean;
+  errorDescription: string | null;
+  leadId: string;
+  leadPhase: NriLeadPhase;
+  matchedParameters: unknown[] | null;
+  request: string | null;
+  response: string | null;
+  retriggerAllowed: boolean;
+  status: string;
+  statusTimestamp: string | null;
+}
+
+export interface IDpipIdentifier {
+  type: string;
+  value: string;
+  role?: string;
+}
+
+export interface IDpipRequest {
+  EIS_PAYLOAD?: {
+    PAYLOAD?: {
+      identifiers?: IDpipIdentifier[];
+    };
+  };
+}
+
+export interface IDpipBlockValidity {
+  valid: boolean;
 }
