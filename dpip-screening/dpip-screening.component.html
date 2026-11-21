@@ -1,9 +1,77 @@
-@if (loading) { <p>Loading DPIP screening...</p> }
-@if (error) { <p role="alert">{{ error }}</p><button type="button" [disabled]="loading" (click)="reload()">Reload history</button> }
-@if (status) { <p>Status: {{ status }}</p> }
-@if (timestamp) { <p>Screening date: {{ timestamp | date:'dd MMM yyyy, hh:mm a' }}</p> }
-@if (rows.length) {
-<table><thead><tr><th>Sr. No.</th><th>ID Type</th><th>Value</th></tr></thead>
-<tbody>@for (row of rows; track $index) { <tr><td>{{ $index + 1 }}</td><td>{{ row.type }}</td><td>{{ row.value }}</td></tr> }</tbody></table>
-}
-@if (isEditable && status) { <button type="button" [disabled]="loading || !retriggerAllowed" (click)="retry()">Retrigger DPIP</button> }
+<div class="dpip-screening-container">
+
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner diameter="35"></mat-spinner>
+      <span>Fetching DPIP screening details...</span>
+    </div>
+  } @else if (errorMessage) {
+    <div class="error-message" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+    <button type="button" mat-stroked-button
+      (click)="getDpipScreeningHistory()">Retry</button>
+  } @else if (dpipDetails) {
+    <div class="screening-status">
+      @if (
+        dpipDetails.status === dpipStatusEnum.NO_MATCH &&
+        !dpipDetails.dpipBypassed &&
+        !dpipDetails.errorDescription
+      ) {
+        <div class="success-message">
+          <mat-icon>check_circle</mat-icon>
+          <span>NO MATCH FOUND</span>
+        </div>
+      } @else {
+        <div class="warning-message">
+          <mat-icon>info</mat-icon>
+          <span>{{ dpipDetails.status || 'Status unavailable' }}</span>
+        </div>
+      }
+      <div class="screening-timestamp">
+        <strong>Screening Date &amp; Time:</strong>
+        {{ dpipDetails.statusTimestamp | date: 'dd MMM yyyy, hh:mm a' }}
+      </div>
+    </div>
+
+    @if (dpipDetails.errorDescription) {
+      <div class="error-message">{{ dpipDetails.errorDescription }}</div>
+    }
+
+    @if (identifiers.length) {
+      <div class="table-container">
+        <table mat-table [dataSource]="identifiers" class="w-100">
+          <ng-container matColumnDef="serialNo">
+            <th mat-header-cell *matHeaderCellDef>Sr. No.</th>
+            <td mat-cell *matCellDef="let row; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>ID Type</th>
+            <td mat-cell *matCellDef="let row">
+              {{ identifierDisplayRecord[row.type] || row.type }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="value">
+            <th mat-header-cell *matHeaderCellDef>Value</th>
+            <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    } @else {
+      <div class="empty-message">No screening identifiers available.</div>
+    }
+
+    <div class="action-container">
+      <button type="button" mat-raised-button color="primary"
+        [disabled]="!canRetrigger" (click)="triggerDpipScreening()">
+        <mat-icon>refresh</mat-icon>
+        Retrigger DPIP
+      </button>
+    </div>
+  } @else {
+    <div class="empty-message">No DPIP screening history available.</div>
+  }
+</div>
