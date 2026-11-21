@@ -1,0 +1,9 @@
+@if (loading) { <p>Loading DPIP screening...</p> }
+@if (error) { <p role="alert">{{ error }}</p><button type="button" [disabled]="loading" (click)="reload()">Reload history</button> }
+@if (status) { <p>Status: {{ status }}</p> }
+@if (timestamp) { <p>Screening date: {{ timestamp | date:'dd MMM yyyy, hh:mm a' }}</p> }
+@if (rows.length) {
+<table><thead><tr><th>Sr. No.</th><th>ID Type</th><th>Value</th></tr></thead>
+<tbody>@for (row of rows; track $index) { <tr><td>{{ $index + 1 }}</td><td>{{ row.type }}</td><td>{{ row.value }}</td></tr> }</tbody></table>
+}
+@if (isEditable && status) { <button type="button" [disabled]="loading || !retriggerAllowed" (click)="retry()">Retrigger DPIP</button> }
