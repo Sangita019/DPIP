@@ -57,6 +57,7 @@ export class DpipScreeningComponent implements OnChanges {
   @Input() leadId?: string;
   @Input() leadPhase?: NriLeadPhase;
   @Input() isEditable = false;
+  @Input() refreshHistoryVersion = 0;
 
   @Output() valueChange =
     new EventEmitter<IDpipBlockValidity>();
@@ -89,7 +90,7 @@ export class DpipScreeningComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (changes['leadId'] || changes['leadPhase']) {
+    if (changes['leadId'] || changes['leadPhase'] || changes['refreshHistoryVersion']) {
 
       this.activeRequest?.unsubscribe();
       this.resetScreeningData();
@@ -222,7 +223,6 @@ export class DpipScreeningComponent implements OnChanges {
 
     // Provisional rule: confirm approval policy with the workflow owner.
     const isValid =
-      this.dpipDetails?.dpipBypassed === false &&
       this.dpipDetails?.status ===
         DpipScreeningStatusEnum.NO_MATCH &&
       !this.dpipDetails?.errorDescription;
@@ -255,7 +255,6 @@ export class DpipScreeningComponent implements OnChanges {
     return (
       this.isEditable &&
       !this.isLoading &&
-      this.dpipDetails?.dpipBypassed === false &&
       this.dpipDetails?.retriggerAllowed === true
     );
   }
