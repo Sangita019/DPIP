@@ -8,13 +8,33 @@ This repository contains the reusable DPIP child component, not the application'
 | --- | --- | --- |
 | `true` | Show | Show |
 | `false` | Hide | Show |
-| `undefined` or invalid/missing history | Hide | Show DPIP loading/error state; block approval |
+| `undefined` while history is missing | Hide until a trigger returns the flag | Show manual Trigger DPIP button in editable Digital Verification; otherwise show missing-history state; block approval |
 
 ### Why the previous conditional approach hid Name Screening
 
 `leadDetails?.dpipBypassed` returned `undefined` in Digital Verification, even though `dpipBypassed` was present in the **Get DPIP history API** body. In addition, conditionally rendering DPIP only after checking the flag creates a deadlock: the child cannot call the API that supplies the flag until it is rendered.
 
 Therefore **render DPIP unconditionally whenever `leadDetails` exists**, and emit `dpipBypassed` from its API response. Only the existing Name Screening panel/card is gated on `dpipBypassed === true`.
+
+## First-time manual DPIP screening (Digital Verification)
+
+When Get DPIP History returns HTTP 200 with `success: true`, no `body`, and a message containing `No DPIP history found`, the component treats this as a **normal missing-history state**, rather than a generic API error. No trigger request is made automatically.
+
+In **editable** Digital Verification, the component shows **Trigger DPIP**. The user must click it to call the existing `GET /api/bo/lead/dpip/{leadId}` trigger endpoint. Successful trigger responses are processed with the same `processDpipResponse` method, updating the screening table, validity event and `dpipBypassedChange` event.
+
+The initial Trigger DPIP button is shown only for the Digital Verification phase, and is enabled only if `[isEditable]` is true. In CBS Decision, missing history is displayed without an initial trigger option; its existing history refresh path is retained. `retriggerAllowed` applies only to the existing retrigger control, not to the first-time trigger.
+
+**Important:** the parent templates must mount the DPIP child even when `dpipBypassed` is undefined, otherwise the history request and first-time trigger UI cannot run. The absence of a history body means the bypass flag remains unknown until a successful trigger response or another approved backend source supplies it. Therefore the existing Name Screening card stays hidden until then. Keep approval gated.
+
+To enable the first-time button, replace the temporary `isDpipEditable = false` from earlier setup with the application's real Digital Verification permission/editability rule. Never set it globally true without authorization. A network error after attempting trigger should be resolved by checking history first; the UI's history reload avoids blindly resubmitting a potentially completed trigger.
+
+### Manual trigger test
+
+1. Open an editable Digital Verification lead with no DPIP history. Check the Get DPIP history response in the Network tab; the Trigger DPIP button should appear **enabled**.
+2. Click **Trigger DPIP** once, verify that the trigger endpoint is called and that status, ID Type/Value and bypass flag populate from its response.
+3. Verify `dpipBypassed === true` shows both screens, while `false` shows DPIP only.
+4. Verify that a read-only Digital Verification lead disables Trigger DPIP; CBS Decision never offers the initial Trigger DPIP button.
+5. Verify a 401/403/500 or invalid response keeps approval blocked and does not silently retry the trigger.
 
 ## Common changes in BOTH parent .ts files
 
@@ -133,6 +153,6 @@ get isScreeningValid(): boolean {
 }
 ```
 
-DPIP validity currently treats `NO_MATCH` as cleared provisionally; verify other statuses, error handling, match presentation, initial screening trigger and retrigger permissions. When the Get DPIP history API returns no body, the flag cannot be inferred: DPIP shows its error/loading state and Name Screening remains hidden. For that case a dedicated configuration field in the lead-details API is the long-term alternative.
+DPIP validity currently treats `NO_MATCH` as cleared provisionally; verify other statuses, error handling, match presentation, and backend permission rules for manual initial screening and retrigger. When Get DPIP history returns no body with the confirmed no-history message, the flag cannot yet be inferred: DPIP shows the manual first-time trigger option in editable Digital Verification, while Name Screening stays hidden. A dedicated configuration field in the lead-details API would allow independent visibility before first screening.
 
 Identifiers in the DPIP table come from `body.request` and are **request identifiers**, not match results. Apply bank-approved masking and access restrictions before displaying live customer data. The sample repository contains no actual parent source or credentials and has not been compiled against the host Angular project.
