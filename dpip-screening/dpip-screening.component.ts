@@ -62,6 +62,11 @@ export class DpipScreeningComponent implements OnChanges {
   @Output() valueChange =
     new EventEmitter<IDpipBlockValidity>();
 
+  // Async output avoids changing the parent flag during Angular input checking.
+  // Undefined means the flag is still unavailable or the history request failed.
+  @Output() dpipBypassedChange =
+    new EventEmitter<boolean | undefined>(true);
+
   dpipDetails?: ILeadDpipDto;
 
   identifiers: IDpipIdentifier[] = [];
@@ -90,13 +95,16 @@ export class DpipScreeningComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (changes['leadId'] || changes['leadPhase'] || changes['refreshHistoryVersion']) {
-
-      this.activeRequest?.unsubscribe();
-      this.resetScreeningData();
-
+    if (
+      changes['leadId'] ||
+      changes['leadPhase'] ||
+      changes['refreshHistoryVersion']
+    ) {
       if (this.leadId && this.leadPhase) {
         this.getDpipScreeningHistory();
+      } else {
+        this.activeRequest?.unsubscribe();
+        this.resetScreeningData();
       }
     }
   }
@@ -178,7 +186,16 @@ export class DpipScreeningComponent implements OnChanges {
       return;
     }
 
+    if (typeof res.body.dpipBypassed !== 'boolean') {
+      this.handleApiError('DPIP bypass configuration is unavailable.');
+      return;
+    }
+
     this.dpipDetails = res.body;
+
+    // The parent decides whether to display legacy Name Screening.
+    // DPIP is always rendered when lead details are available.
+    this.dpipBypassedChange.emit(this.dpipDetails.dpipBypassed);
 
     this.identifiers = this.parseIdentifiers(
       this.dpipDetails.request
@@ -242,6 +259,7 @@ export class DpipScreeningComponent implements OnChanges {
     this.valueChange.emit({
       valid: false
     });
+    this.dpipBypassedChange.emit(undefined);
   }
 
   private handleApiError(message: string): void {
