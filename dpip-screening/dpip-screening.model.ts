@@ -2,7 +2,8 @@ import { NriLeadPhase } from
   'src/app/nri/workflow/constants/lead.constants';
 
 export interface IDpipScreeningResponse {
-  body: ILeadDpipDto | null;
+  // The history endpoint may omit body when no screening history exists.
+  body?: ILeadDpipDto | null;
   messages: string[];
   success: boolean;
 }
