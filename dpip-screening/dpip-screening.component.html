@@ -5,6 +5,34 @@
       <mat-spinner diameter="35"></mat-spinner>
       <span>Fetching DPIP screening details...</span>
     </div>
+  } @else if (noHistoryFound) {
+    <div class="empty-message">
+      <p>No DPIP screening history found for this lead and phase.</p>
+
+      @if (isInitialTriggerAvailable) {
+        <button
+          type="button"
+          mat-raised-button
+          color="primary"
+          [disabled]="!canTriggerInitially"
+          (click)="triggerDpipScreening()">
+          <mat-icon>play_arrow</mat-icon>
+          Trigger DPIP
+        </button>
+        @if (!isEditable) {
+          <p>Initial screening is available only when Digital Verification is editable.</p>
+        }
+      } @else {
+        <p>Initial DPIP screening can be triggered only during Digital Verification.</p>
+      }
+
+      <button
+        type="button"
+        mat-stroked-button
+        (click)="getDpipScreeningHistory()">
+        Reload history
+      </button>
+    </div>
   } @else if (errorMessage) {
     <div class="error-message" role="alert">
       <mat-icon>error_outline</mat-icon>
