@@ -79,6 +79,10 @@ export class DpipScreeningComponent implements OnChanges {
 
   isLoading = false;
   errorMessage = '';
+  // A missing-history response is not an HTTP error. It enables a manual
+  // first-time trigger in editable Digital Verification only.
+  noHistoryFound = false;
+  isInitialTriggerAvailable = false;
 
   readonly identifierDisplayRecord =
     DpipIdentifierDisplayRecord;
@@ -127,6 +131,24 @@ export class DpipScreeningComponent implements OnChanges {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res: IDpipScreeningResponse) => {
+          const noHistory =
+            res.success === true &&
+            !res.body &&
+            res.messages?.some(
+              message => typeof message === 'string' &&
+                message.toLowerCase().includes('no dpip history found')
+            );
+
+          if (noHistory) {
+            this.isLoading = false;
+            this.noHistoryFound = true;
+            this.isInitialTriggerAvailable =
+              this.leadPhase === NriLeadPhase.DIGITAL_VERIFICATION;
+            // No bypass flag can be inferred until a screening response exists.
+            // resetScreeningData() has already emitted undefined to the parent.
+            return;
+          }
+
           this.processDpipResponse(res);
         },
         error: () => {
@@ -139,7 +161,11 @@ export class DpipScreeningComponent implements OnChanges {
 
   triggerDpipScreening(): void {
 
-    if (!this.leadId || !this.canRetrigger) {
+    if (
+      !this.leadId ||
+      !this.leadPhase ||
+      (!this.canTriggerInitially && !this.canRetrigger)
+    ) {
       return;
     }
 
@@ -255,6 +281,8 @@ export class DpipScreeningComponent implements OnChanges {
     this.identifiers = [];
     this.errorMessage = '';
     this.isLoading = false;
+    this.noHistoryFound = false;
+    this.isInitialTriggerAvailable = false;
 
     this.valueChange.emit({
       valid: false
@@ -266,6 +294,17 @@ export class DpipScreeningComponent implements OnChanges {
 
     this.resetScreeningData();
     this.errorMessage = message;
+  }
+
+  get canTriggerInitially(): boolean {
+    return (
+      this.isInitialTriggerAvailable &&
+      this.noHistoryFound &&
+      this.isEditable &&
+      !this.isLoading &&
+      !!this.leadId &&
+      this.leadPhase === NriLeadPhase.DIGITAL_VERIFICATION
+    );
   }
 
   get canRetrigger(): boolean {
