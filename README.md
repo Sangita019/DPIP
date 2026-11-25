@@ -1,24 +1,28 @@
 # DPIP Screening Angular integration reference
 
-This repository contains the standalone DPIP Angular component/service/models for use in an existing application. The service calls the live backend through the host application's `BANK_ENDP` constants and `NriLeadPhase`; no mock-data dependency, tokens or real customer details are embedded.
+This repository contains a reusable Angular DPIP component/service/model for an existing banking workflow application. It calls the host application's real `BANK_ENDP` APIs; no mock API, credentials, or real customer data are stored here.
 
-## Rendering rules
+## Final workflow display rules
 
-| `dpipBypassed` from Get DPIP history | Existing Name Screening | DPIP Screening |
+| `dpipBypassed` | Existing Name Screening | DPIP Screening |
 |---|---|---|
-| `true` | Show | Show |
-| `false` | Hide | Show |
-| Missing history | Hide until flag becomes known | Show manual Trigger DPIP in editable Digital Verification; otherwise show no-history state; block approval |
-| API failure/unknown | Hide | Show error and block approval |
+| `true` | Show | Hide |
+| `false` | Show | Show |
+| `undefined` | Show | Resolve flag from backend; approval blocked |
 
-**Important:** The host application's `leadDetails?.dpipBypassed` was returning `undefined`. The DPIP child must therefore be mounted whenever lead details are available, without first checking the bypass flag. It emits the flag through `(dpipBypassedChange)` after its Get DPIP history call. The parent uses this to conditionally render only the existing Name Screening component. Never wrap the DPIP child in a bypass flag condition.
+**Existing Name Screening always remains visible.** The parent must not conditionally destroy the DPIP child based on a bypass value that the child is responsible for fetching. See [integration.md](integration.md) for the current non-destructive display workaround, its limitation while the flag is unknown, and the preferred independent backend bypass flag.
 
-The component supports `leadId`, `leadPhase`, `isEditable`, `refreshHistoryVersion` (CBS refresh), `(dpipBypassedChange)` and `(valueChange)`. The bypass output emits `undefined` when history is reset/unavailable and accepts only a boolean from a valid response.
+## Latest DPIP UI and response handling
 
-### Manual first-time trigger
+- Reads DPIP history automatically for the selected lead/phase; new screening is **never triggered automatically**.
+- Shows a manual **Trigger DPIP** button for no-history, editable Digital Verification.
+- Shows status, timestamp, request identifiers, EIS processing status and EIS screening result when available.
+- Accepts both parsed JSON objects and serialized JSON strings in `body.request` and `body.response` (the actual API screenshots show objects).
+- Displays submitted ID Type/Value in a responsive, horizontally scrollable table.
+- Shows **Re-Trigger DPIP** with an inactive state when `retriggerAllowed:false`. The button becomes active only with workflow permission, `dpipBypassed:false`, and backend `retriggerAllowed:true`.
+- Keeps DPIP validity conservative: body.status `NO_MATCH` and no error description (provisional pending business confirmation). A nested EIS outcome is shown for reference, not automatically treated as an approval decision.
+- Uses a responsive template and SCSS for proper status, table and button spacing.
 
-When Get DPIP History returns `success: true` with no body and the message `No DPIP history found for lead and phase`, the component displays an initial **Trigger DPIP** action only for editable `DIGITAL_VERIFICATION`. It never invokes the trigger endpoint automatically; the user must click the button. The existing `retriggerAllowed` switch remains separate. In CBS Decision, missing history is displayed but no initial trigger is offered.
+Actual `digital-verification.component.*` and `cbs-decision.component.*` files are **not in this repository**; follow [integration.md](integration.md) to update them in your DAS Angular application, including closing the Material expansion-panel header **before** inserting the DPIP child.
 
-The parent application's `isDpipEditable` must reflect real workflow permissions. A temporary `false` value disables the manual trigger. After a trigger response succeeds, the component emits the returned bypass boolean and displays status/identifiers. Backend authorization remains mandatory.
-
-See [integration.md](integration.md) for exact Digital Verification and CBS Decision parent HTML/TS snippets, safe loading behavior, and approval caveats. Actual parent files are not stored here and must be integrated in the host application. Business approval conditions, backend status meaning, permission rules for initial triggering and displaying/masking customer identifiers require confirmation. This reference has not been compiled against the host application.
+Backend requirements and permissions (including re-trigger policy and bypass configuration), customer identifier masking, complete EIS match details, and final approval criteria must be validated with the backend/workflow owners. This reference has not been compiled against the host Angular application.
