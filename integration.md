@@ -86,7 +86,7 @@ Declare `readonly dpipLeadPhase = NriLeadPhase.DIGITAL_VERIFICATION;`. Bind `isD
 
 ### First-time manual trigger
 
-On GET history response `{ success:true, messages:["No DPIP history found for lead and phase"] }` (no body), DPIP displays a manual **Trigger DPIP** action only in editable Digital Verification. Clicking it calls the existing trigger API. It does **not** trigger automatically. A failed trigger must not be blindly replayed: reload history to see if it actually completed.
+On GET history response `{ success:true, messages:["No DPIP history found for lead and phase"] }` (no body), DPIP displays a manual **Trigger DPIP** action in an **editable Digital Verification or CBS Implementation** step. Clicking it calls the existing trigger API by lead ID. It does **not** trigger automatically. The trigger response must contain the selected lead ID and phase to populate the screen; confirm that the backend trigger endpoint chooses `CBS_IMPLEMENTATION` when called from CBS. If a trigger fails or times out, inspect history before trying again to avoid duplicate screening attempts.
 
 ## CBS Decision HTML
 
@@ -124,7 +124,7 @@ checkForNameScreeningHistory(): void {
 }
 ```
 
-The current DPIP child does not present an initial Trigger DPIP button for CBS Decision. A Re-Trigger DPIP button is present whenever history exists but is disabled unless the step is editable **and** the backend returns `retriggerAllowed:true` (and bypass is false). The **Re-Trigger DPIP** button is positioned at the top-right of the DPIP content, aligned like the existing Name Screening action. The separate **Reload history** button has been removed from the DPIP UI; **Retry** is retained only for an API error.
+The DPIP child displays **Trigger DPIP** when no CBS-specific history exists and the phase is `CBS_IMPLEMENTATION`; the button is enabled only for editable steps. After history exists, **Re-Trigger DPIP** appears in the top-right of the DPIP content, aligned like Name Screening. Following backend team confirmation, the frontend no longer gates this action on `retriggerAllowed`; it still checks step editability, loading state, supported phase, and that `dpipBypassed` is false. Backend authorization and duplicate-request controls must remain enforced on the server. The separate **Reload history** button has been removed; **Retry** is retained only for an API error.
 
 ## Data handling changes included in this repository
 
@@ -135,7 +135,7 @@ The backend samples returned **objects** for `body.request` and `body.response`;
 - `response.EIS_RESPONSE.payload.payload.status`: displays the EIS screening result, e.g. NO_MATCH.
 - `response.EIS_RESPONSE.payload.payload.matched_identifiers`: displays the count only; match-detail layout needs the actual non-empty response schema.
 - `body.status`: drives current **provisional** NO_MATCH validity; an EIS status does not silently override a null body status.
-- `body.retriggerAllowed`: controls whether re-triggering is enabled.
+- `body.retriggerAllowed`: still part of the response model, but **not used for frontend re-trigger eligibility** per backend team's confirmed workflow; server-side authorization still applies.
 
 The component layout now uses wrapping controls and an overflow-safe identifier table. **It cannot repair a parent template that nests DPIP content inside a Material expansion-panel header**; fix the parent as shown above.
 
@@ -144,8 +144,8 @@ The component layout now uses wrapping controls and an overflow-safe identifier 
 1. History GET executes for Digital Verification and CBS Implementation with the correct lead and phase.
 2. A completed response with a `body` shows Type and Value from request identifiers, DPIP status, EIS processing/result and timestamp.
 3. When the bypass flag is true, Name Screening remains visible but DPIP is hidden. When false, both are visible.
-4. For a lead with no history, the Digital Verification initial button appears only when editable.
-5. When `retriggerAllowed:false`, the **Re-Trigger DPIP** button remains visible but disabled.
+4. For a lead with no history in either Digital Verification or CBS Implementation, **Trigger DPIP** appears and is enabled only for an editable step.
+5. After history exists, **Re-Trigger DPIP** is enabled for editable, non-bypassed leads even when `retriggerAllowed:false` in the response. The server must still authorize the actual action.
 6. API or JSON parsing errors do not enable approval.
 7. A small viewport shows scrolling/wrapping rather than overlapping content.
 8. Sensitive identifiers are displayed only according to bank-approved masking and user access rules.
