@@ -12,7 +12,7 @@
       <span>No DPIP screening history found for this lead and phase.</span>
     </div>
 
-    @if (isInitialTriggerAvailable) {
+    @if (isScreeningPhase) {
       <div class="dpip-actions dpip-actions-top">
         <button type="button" mat-stroked-button color="primary"
           [disabled]="!canTriggerInitially"
@@ -23,11 +23,11 @@
       </div>
     }
 
-    @if (isInitialTriggerAvailable && !isEditable) {
+    @if (isScreeningPhase && !isEditable) {
       <p class="action-help">
         Trigger DPIP is available only when the current workflow step is editable.
       </p>
-    } @else if (!isInitialTriggerAvailable) {
+    } @else if (!isScreeningPhase) {
       <p class="action-help">
         Initial DPIP screening is unavailable for this workflow phase.
       </p>
