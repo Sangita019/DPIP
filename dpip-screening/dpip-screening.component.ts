@@ -84,13 +84,9 @@ export class DpipScreeningComponent implements OnChanges {
   // A missing-history response is not an HTTP error. Initial screening
   // can be manually triggered in either editable workflow phase.
   noHistoryFound = false;
-  isInitialTriggerAvailable = false;
 
   readonly identifierDisplayRecord =
     DpipIdentifierDisplayRecord;
-
-  readonly dpipStatusEnum =
-    DpipScreeningStatusEnum;
 
   private destroyRef = inject(DestroyRef);
   private activeRequest?: Subscription;
@@ -150,7 +146,6 @@ export class DpipScreeningComponent implements OnChanges {
           if (noHistory) {
             this.isLoading = false;
             this.noHistoryFound = true;
-            this.isInitialTriggerAvailable = this.isScreeningPhase;
             // No bypass flag can be inferred until a screening response exists.
             // resetScreeningData() has already emitted undefined to the parent.
             return;
@@ -304,7 +299,8 @@ export class DpipScreeningComponent implements OnChanges {
     }
 
     const status = this.dpipDetails.status?.trim().toUpperCase() ?? '';
-    const eisProcessing = this.eisProcessingStatus?.trim().toUpperCase() ?? '';
+    const eisProcessing =
+      this.eisResponse?.EIS_RESPONSE?.payload?.status?.trim().toUpperCase() ?? '';
     const eisErrorCode =
       this.eisResponse?.EIS_RESPONSE?.ERROR_CODE?.trim();
     const eisErrorDescription =
@@ -329,7 +325,9 @@ export class DpipScreeningComponent implements OnChanges {
     if (status === DpipScreeningStatusEnum.NO_MATCH ||
         status === 'NO_MATCH_FOUND') {
       // Do not clear screening on a contradictory EIS match outcome.
-      const eisOutcome = this.eisScreeningStatus?.trim().toUpperCase();
+      const eisOutcome =
+        this.eisResponse?.EIS_RESPONSE?.payload?.payload?.status
+          ?.trim().toUpperCase();
       const eisMatch =
         this.eisResponse?.EIS_RESPONSE?.payload?.payload?.match;
       if (eisOutcome === 'MATCH' ||
@@ -361,17 +359,8 @@ export class DpipScreeningComponent implements OnChanges {
       null;
   }
 
-  // EIS details remain informative; the main decision uses body.status.
-  get eisScreeningStatus(): string | null {
-    return this.eisResponse?.EIS_RESPONSE?.payload?.payload?.status
-      ?? null;
-  }
-
-  get eisProcessingStatus(): string | null {
-    return this.eisResponse?.EIS_RESPONSE?.payload?.status
-      ?? null;
-  }
-
+  // Nested EIS response is retained for error, conflict and match-count checks.
+  // Displayed EIS Processing/Result are bound to outer body fields in HTML.
   get matchedIdentifierCount(): number | null {
     const matches =
       this.eisResponse?.EIS_RESPONSE?.payload?.payload
@@ -397,7 +386,6 @@ export class DpipScreeningComponent implements OnChanges {
     this.errorMessage = '';
     this.isLoading = false;
     this.noHistoryFound = false;
-    this.isInitialTriggerAvailable = false;
 
     this.valueChange.emit({
       valid: false
@@ -413,7 +401,6 @@ export class DpipScreeningComponent implements OnChanges {
 
   get canTriggerInitially(): boolean {
     return (
-      this.isInitialTriggerAvailable &&
       this.noHistoryFound &&
       this.isEditable &&
       !this.isLoading &&
@@ -434,7 +421,7 @@ export class DpipScreeningComponent implements OnChanges {
     );
   }
 
-  private get isScreeningPhase(): boolean {
+  get isScreeningPhase(): boolean {
     return (
       this.leadPhase === NriLeadPhase.DIGITAL_VERIFICATION ||
       this.leadPhase === NriLeadPhase.CBS_IMPLEMENTATION
