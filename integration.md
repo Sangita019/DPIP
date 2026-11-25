@@ -82,7 +82,7 @@ Within the existing `mat-accordion` and existing `@if (leadDetails)` guard, reta
 </mat-expansion-panel>
 ```
 
-Declare `readonly dpipLeadPhase = NriLeadPhase.DIGITAL_VERIFICATION;`. Bind `isDpipEditable` to the actual Digital Verification step editability and user authorization; avoid hardcoding true. Do not add `[refreshHistoryVersion]` to Digital Verification unless that parent has a defined refresh counter.
+Declare `readonly dpipLeadPhase = NriLeadPhase.DIGITAL_VERIFICATION;`. Bind `isDpipEditable` to the actual Digital Verification step editability and user authorization; avoid hardcoding true. Do not add `[refreshHistoryVersion]` to Digital Verification unless that parent has a defined refresh counter. **Visual styling:** the shared DPIP component automatically applies a 70%-wide centered content layout only when `leadPhase` is `DIGITAL_VERIFICATION` (full width on narrower screens). No parent CSS change is required, and the existing CBS Implementation styling remains unchanged.
 
 ### First-time manual trigger
 
