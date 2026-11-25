@@ -134,7 +134,10 @@ The backend samples returned **objects** for `body.request` and `body.response`;
 - `response.EIS_RESPONSE.payload.status`: displays EIS processing status, e.g. SUCCESS.
 - `response.EIS_RESPONSE.payload.payload.status`: displays the EIS screening result, e.g. NO_MATCH.
 - `response.EIS_RESPONSE.payload.payload.matched_identifiers`: displays the count only; match-detail layout needs the actual non-empty response schema.
-- `body.status`: drives current **provisional** NO_MATCH validity; an EIS status does not silently override a null body status.
+- `body.status`: controls the DPIP decision display and **provisional** approval validity. The backend sample confirms `NO_MATCH`; the UI also recognizes `MATCH`/`MATCH_FOUND` and `API_ERROR`/`ERROR`/`FAILED` (the exact error and match strings must be confirmed with the backend team). No Match is the **only** value that can emit `valid: true`.
+- If `errorDescription`, an EIS error code/description, or an EIS failure is present, the UI displays API Error and emits invalid screening. A contradictory EIS match response prevents `NO_MATCH` from being accepted as valid.
+- Missing/unrecognized status shows Pending / unavailable and emits `valid: false`; a nested EIS `NO_MATCH` alone does not override a missing `body.status`.
+- Match Found shows a warning; No Match shows success; API Error shows an explicit error. Full matched-record details still require a non-empty backend EIS sample.
 - `body.retriggerAllowed`: still part of the response model, but **not used for frontend re-trigger eligibility** per backend team's confirmed workflow; server-side authorization still applies.
 
 The component layout now uses wrapping controls and an overflow-safe identifier table. **It cannot repair a parent template that nests DPIP content inside a Material expansion-panel header**; fix the parent as shown above.
@@ -146,7 +149,7 @@ The component layout now uses wrapping controls and an overflow-safe identifier 
 3. When the bypass flag is true, Name Screening remains visible but DPIP is hidden. When false, both are visible.
 4. For a lead with no history in either Digital Verification or CBS Implementation, **Trigger DPIP** appears and is enabled only for an editable step.
 5. After history exists, **Re-Trigger DPIP** is enabled for editable, non-bypassed leads even when `retriggerAllowed:false` in the response. The server must still authorize the actual action.
-6. API or JSON parsing errors do not enable approval.
+6. Match Found, API Error, unknown/pending status, or contradictory EIS results do not enable approval.
 7. A small viewport shows scrolling/wrapping rather than overlapping content.
 8. Sensitive identifiers are displayed only according to bank-approved masking and user access rules.
 
