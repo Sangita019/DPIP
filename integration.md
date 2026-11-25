@@ -131,8 +131,9 @@ The DPIP child displays **Trigger DPIP** when no CBS-specific history exists and
 The backend samples returned **objects** for `body.request` and `body.response`; earlier responses sometimes used JSON strings. The component now supports both types.
 
 - `request.EIS_PAYLOAD.PAYLOAD.identifiers`: displays the request identifier type and value.
-- `response.EIS_RESPONSE.payload.status`: displays EIS processing status, e.g. SUCCESS.
-- `response.EIS_RESPONSE.payload.payload.status`: displays the EIS screening result, e.g. NO_MATCH.
+- **Displayed EIS Processing** is bound to outer `body.errorDescription` (null is shown as `N/A`), per review feedback. Do **not** use `response.EIS_RESPONSE.payload.status` for this UI label.
+- **Displayed EIS Result** is bound to outer `body.status` (null is shown as `Pending / unavailable`), per review feedback. Do **not** use `response.EIS_RESPONSE.payload.payload.status` for this UI label.
+- Nested EIS status fields remain available internally for conservative consistency/error validation, but they are not the displayed values for these two labels.
 - `response.EIS_RESPONSE.payload.payload.matched_identifiers`: displays the count only; match-detail layout needs the actual non-empty response schema.
 - `body.status`: controls the DPIP decision display and **provisional** approval validity. The backend sample confirms `NO_MATCH`; the UI also recognizes `MATCH`/`MATCH_FOUND` and `API_ERROR`/`ERROR`/`FAILED` (the exact error and match strings must be confirmed with the backend team). No Match is the **only** value that can emit `valid: true`.
 - If `errorDescription`, an EIS error code/description, or an EIS failure is present, the UI displays API Error and emits invalid screening. A contradictory EIS match response prevents `NO_MATCH` from being accepted as valid.
