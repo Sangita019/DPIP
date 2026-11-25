@@ -86,7 +86,7 @@ Declare `readonly dpipLeadPhase = NriLeadPhase.DIGITAL_VERIFICATION;`. Bind `isD
 
 ### First-time manual trigger
 
-On GET history response `{ success:true, messages:["No DPIP history found for lead and phase"] }` (no body), DPIP displays a manual **Trigger DPIP** action in an **editable Digital Verification or CBS Implementation** step. Clicking it calls the existing trigger API by lead ID. It does **not** trigger automatically. The trigger response must contain the selected lead ID and phase to populate the screen; confirm that the backend trigger endpoint chooses `CBS_IMPLEMENTATION` when called from CBS. If a trigger fails or times out, inspect history before trying again to avoid duplicate screening attempts.
+On GET history response `{ success:true, messages:["No DPIP history found for lead and phase"] }` (no body), DPIP displays a manual **Trigger DPIP** action in an **editable Digital Verification or CBS Implementation** step. Clicking it calls the existing trigger API by lead ID. It does **not** trigger automatically. When the trigger response contains a complete DPIP body with a matching lead ID and phase, it is processed directly (like Name Screening). If the trigger response returns `success:true` but no `body` (acknowledgement only), the component calls the phase-specific **Get DPIP History** API once to load the new record. If the record is not yet ready, the UI displays no history and does **not** automatically retry or re-trigger. Confirm that the backend trigger endpoint chooses `CBS_IMPLEMENTATION` when called from CBS. If a trigger fails or times out, inspect history before trying again to avoid duplicate screening attempts.
 
 ## CBS Decision HTML
 
