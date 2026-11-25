@@ -69,6 +69,11 @@
   color: #2e7d32;
 }
 
+.dpip-result.match-found,
+.dpip-result.api-error {
+  color: #b71c1c;
+}
+
 .status-meta,
 .eis-summary {
   display: flex;
