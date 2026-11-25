@@ -139,6 +139,11 @@
   min-width: 0;
 }
 
+.dpip-actions-top {
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
 .dpip-actions button {
   max-width: 100%;
   white-space: normal;
@@ -164,6 +169,14 @@
 
   .dpip-actions button {
     width: 100%;
+  }
+
+  .dpip-actions-top {
+    justify-content: flex-end;
+  }
+
+  .dpip-actions-top button {
+    width: auto;
   }
 
   .dpip-table th,
