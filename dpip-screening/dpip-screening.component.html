@@ -1,4 +1,4 @@
-<div class="dpip-screening-container">
+<div class="dpip-screening-container" [class.dpip-digital-verification]="isDigitalVerificationPhase">
 
   @if (isLoading) {
     <div class="state-message" role="status" aria-live="polite">
