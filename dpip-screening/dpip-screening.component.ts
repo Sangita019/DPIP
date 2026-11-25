@@ -28,6 +28,7 @@ import {
   ILeadDpipDto,
   IDpipIdentifier,
   IDpipRequest,
+  IDpipEisResponse,
   IDpipBlockValidity
 } from './dpip-screening.model';
 
@@ -68,6 +69,7 @@ export class DpipScreeningComponent implements OnChanges {
     new EventEmitter<boolean | undefined>(true);
 
   dpipDetails?: ILeadDpipDto;
+  eisResponse: IDpipEisResponse | null = null;
 
   identifiers: IDpipIdentifier[] = [];
 
@@ -226,40 +228,80 @@ export class DpipScreeningComponent implements OnChanges {
     this.identifiers = this.parseIdentifiers(
       this.dpipDetails.request
     );
+    this.eisResponse = this.readJsonObject(
+      this.dpipDetails.response
+    );
 
     this.emitScreeningValidity();
   }
 
-  private parseIdentifiers(
-    request: string | null
-  ): IDpipIdentifier[] {
-
-    if (!request) {
-      return [];
+  // The backend returns request/response either as JSON objects or strings.
+  // JSON.parse must only run on strings; never on an already parsed object.
+  private readJsonObject<T extends object>(
+    raw: T | string | null
+  ): T | null {
+    if (!raw) {
+      return null;
     }
 
     try {
+      const value: unknown =
+        typeof raw === 'string' ? JSON.parse(raw) : raw;
 
-      const parsedRequest: IDpipRequest =
-        JSON.parse(request);
-
-      const identifiers =
-        parsedRequest?.EIS_PAYLOAD?.PAYLOAD?.identifiers;
-
-      if (!Array.isArray(identifiers)) {
-        return [];
-      }
-
-      return identifiers.filter(
-        item =>
-          item &&
-          typeof item.type === 'string' &&
-          typeof item.value === 'string'
-      );
-
+      return value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+        ? value as T
+        : null;
     } catch {
+      return null;
+    }
+  }
+
+  private parseIdentifiers(
+    request: IDpipRequest | string | null
+  ): IDpipIdentifier[] {
+    const parsed = this.readJsonObject<IDpipRequest>(request);
+    const identifiers =
+      parsed?.EIS_PAYLOAD?.PAYLOAD?.identifiers;
+
+    if (!Array.isArray(identifiers)) {
       return [];
     }
+
+    return identifiers.filter(
+      item =>
+        item !== null &&
+        typeof item === 'object' &&
+        typeof item.type === 'string' &&
+        typeof item.value === 'string'
+    );
+  }
+
+  get isNoMatch(): boolean {
+    return (
+      this.dpipDetails?.status === DpipScreeningStatusEnum.NO_MATCH &&
+      !this.dpipDetails?.errorDescription
+    );
+  }
+
+  // EIS status is informative; approval still uses body.status only.
+  get eisScreeningStatus(): string | null {
+    return this.eisResponse?.EIS_RESPONSE?.payload?.payload?.status
+      ?? null;
+  }
+
+  get eisProcessingStatus(): string | null {
+    return this.eisResponse?.EIS_RESPONSE?.payload?.status
+      ?? null;
+  }
+
+  get matchedIdentifierCount(): number | null {
+    const matches =
+      this.eisResponse?.EIS_RESPONSE?.payload?.payload
+        ?.matched_identifiers;
+
+    return Array.isArray(matches) ? matches.length : null;
   }
 
   private emitScreeningValidity(): void {
@@ -278,6 +320,7 @@ export class DpipScreeningComponent implements OnChanges {
   private resetScreeningData(): void {
 
     this.dpipDetails = undefined;
+    this.eisResponse = null;
     this.identifiers = [];
     this.errorMessage = '';
     this.isLoading = false;
@@ -312,6 +355,7 @@ export class DpipScreeningComponent implements OnChanges {
     return (
       this.isEditable &&
       !this.isLoading &&
+      this.dpipDetails?.dpipBypassed === false &&
       this.dpipDetails?.retriggerAllowed === true
     );
   }
