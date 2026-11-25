@@ -48,18 +48,6 @@
     </div>
 
   } @else if (dpipDetails) {
-    <!-- CBS keeps its existing top-right action placement. -->
-    @if (!isDigitalVerificationPhase) {
-      <div class="dpip-actions dpip-actions-top">
-        <button type="button" mat-stroked-button color="warn"
-          [disabled]="!canRetrigger"
-          (click)="triggerDpipScreening()">
-          <mat-icon>refresh</mat-icon>
-          Re-Trigger DPIP Screening
-        </button>
-      </div>
-    }
-
     <div class="dpip-summary">
       <div class="dpip-status-row">
         <div class="dpip-result"
@@ -81,17 +69,15 @@
           }
         </div>
 
-        <!-- Digital Verification aligns Re-Trigger with the decision status. -->
-        @if (isDigitalVerificationPhase) {
-          <div class="dpip-actions dpip-actions-inline">
-            <button type="button" mat-stroked-button color="warn"
-              [disabled]="!canRetrigger"
-              (click)="triggerDpipScreening()">
-              <mat-icon>refresh</mat-icon>
-              Re-Trigger DPIP Screening
-            </button>
-          </div>
-        }
+        <!-- Keep Re-Trigger beside the status in both Digital Verification and CBS. -->
+        <div class="dpip-actions dpip-actions-inline">
+          <button type="button" mat-stroked-button color="warn"
+            [disabled]="!canRetrigger"
+            (click)="triggerDpipScreening()">
+            <mat-icon>refresh</mat-icon>
+            Re-Trigger DPIP Screening
+          </button>
+        </div>
       </div>
 
       @if (dpipDetails.statusTimestamp) {
