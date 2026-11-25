@@ -59,10 +59,19 @@
     </div>
 
     <div class="dpip-summary">
-      <div class="dpip-result" [class.no-match]="isNoMatch">
+      <div class="dpip-result"
+        [class.no-match]="isNoMatch"
+        [class.match-found]="isMatchFound"
+        [class.api-error]="isApiError">
         @if (isNoMatch) {
           <mat-icon>check_circle</mat-icon>
           <span>NO MATCH FOUND</span>
+        } @else if (isMatchFound) {
+          <mat-icon>warning_amber</mat-icon>
+          <span>MATCH FOUND — review required</span>
+        } @else if (isApiError) {
+          <mat-icon>error_outline</mat-icon>
+          <span>NO DECISION COULD BE MADE DUE TO API ERROR</span>
         } @else {
           <mat-icon>info_outline</mat-icon>
           <span>DPIP status: {{ dpipDetails.status || 'Pending / unavailable' }}</span>
@@ -90,10 +99,10 @@
         </div>
       }
 
-      @if (dpipDetails.errorDescription) {
+      @if (screeningErrorDescription) {
         <div class="state-message error-message" role="alert">
           <mat-icon>error_outline</mat-icon>
-          <span>{{ dpipDetails.errorDescription }}</span>
+          <span>{{ screeningErrorDescription }}</span>
         </div>
       }
     </div>
