@@ -85,19 +85,18 @@
         </div>
       }
 
-      @if (eisScreeningStatus || eisProcessingStatus) {
-        <div class="eis-summary">
-          @if (eisProcessingStatus) {
-            <span><strong>EIS Processing:</strong> {{ eisProcessingStatus }}</span>
-          }
-          @if (eisScreeningStatus) {
-            <span><strong>EIS Result:</strong> {{ eisScreeningStatus }}</span>
-          }
-          @if (matchedIdentifierCount !== null) {
-            <span><strong>Matched identifiers:</strong> {{ matchedIdentifierCount }}</span>
-          }
-        </div>
-      }
+      <!-- Reviewed mapping: display outer DPIP body fields, not nested EIS_RESPONSE statuses. -->
+      <div class="eis-summary">
+        <span><strong>EIS Processing:</strong>
+          {{ dpipDetails.errorDescription ?? 'N/A' }}
+        </span>
+        <span><strong>EIS Result:</strong>
+          {{ dpipDetails.status ?? 'Pending / unavailable' }}
+        </span>
+        @if (matchedIdentifierCount !== null) {
+          <span><strong>Matched identifiers:</strong> {{ matchedIdentifierCount }}</span>
+        }
+      </div>
 
       @if (screeningErrorDescription) {
         <div class="state-message error-message" role="alert">
