@@ -179,6 +179,15 @@ export class DpipScreeningComponent implements OnChanges {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res: IDpipScreeningResponse) => {
+          // As with Name Screening, process a complete trigger response
+          // directly. Some DPIP triggers may only acknowledge success;
+          // in that case fetch history once rather than treating the
+          // acknowledgement as an API error.
+          if (res.success === true && !res.body) {
+            this.getDpipScreeningHistory();
+            return;
+          }
+
           this.processDpipResponse(res);
         },
         error: () => {
@@ -220,8 +229,8 @@ export class DpipScreeningComponent implements OnChanges {
 
     this.dpipDetails = res.body;
 
-    // The parent decides whether to display legacy Name Screening.
-    // DPIP is always rendered when lead details are available.
+    // Name Screening is always displayed by the parent.
+    // The parent uses this flag to hide DPIP when bypass is enabled.
     this.dpipBypassedChange.emit(this.dpipDetails.dpipBypassed);
 
     this.identifiers = this.parseIdentifiers(
