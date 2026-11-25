@@ -48,13 +48,13 @@
     </div>
 
   } @else if (dpipDetails) {
-    <!-- Align with the top-right Name Screening action, outside panel header. -->
+    <!-- Same top-right warning-styled re-trigger action as Name Screening. -->
     <div class="dpip-actions dpip-actions-top">
-      <button type="button" mat-stroked-button color="primary"
+      <button type="button" mat-stroked-button color="warn"
         [disabled]="!canRetrigger"
         (click)="triggerDpipScreening()">
         <mat-icon>refresh</mat-icon>
-        Re-Trigger DPIP
+        Re-Trigger DPIP Screening
       </button>
     </div>
 
