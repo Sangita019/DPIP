@@ -292,14 +292,76 @@ export class DpipScreeningComponent implements OnChanges {
     );
   }
 
-  get isNoMatch(): boolean {
-    return (
-      this.dpipDetails?.status === DpipScreeningStatusEnum.NO_MATCH &&
-      !this.dpipDetails?.errorDescription
-    );
+  /**
+   * Unlike Name Screening's MATCH_FOUND/NO_MATCH_FOUND/API_ERROR decision,
+   * DPIP returns body.status (sample: NO_MATCH). This normalizes the known
+   * categories while accepting common backend aliases. Unknown or missing
+   * statuses remain pending and never pass screening.
+   */
+  get screeningStatus(): DpipScreeningStatusEnum | null {
+    if (!this.dpipDetails) {
+      return null;
+    }
+
+    const status = this.dpipDetails.status?.trim().toUpperCase() ?? '';
+    const eisProcessing = this.eisProcessingStatus?.trim().toUpperCase() ?? '';
+    const eisErrorCode =
+      this.eisResponse?.EIS_RESPONSE?.ERROR_CODE?.trim();
+    const eisErrorDescription =
+      this.eisResponse?.EIS_RESPONSE?.ERROR_DESCRIPTION?.trim();
+
+    // Explicit errors take precedence even if body.status says NO_MATCH.
+    if (
+      this.dpipDetails.errorDescription?.trim() ||
+      eisErrorCode ||
+      eisErrorDescription ||
+      ['API_ERROR', 'ERROR', 'FAILED', 'FAILURE'].includes(status) ||
+      ['API_ERROR', 'ERROR', 'FAILED', 'FAILURE'].includes(eisProcessing)
+    ) {
+      return DpipScreeningStatusEnum.API_ERROR;
+    }
+
+    if (status === DpipScreeningStatusEnum.MATCH ||
+        status === 'MATCH_FOUND') {
+      return DpipScreeningStatusEnum.MATCH;
+    }
+
+    if (status === DpipScreeningStatusEnum.NO_MATCH ||
+        status === 'NO_MATCH_FOUND') {
+      // Do not clear screening on a contradictory EIS match outcome.
+      const eisOutcome = this.eisScreeningStatus?.trim().toUpperCase();
+      const eisMatch =
+        this.eisResponse?.EIS_RESPONSE?.payload?.payload?.match;
+      if (eisOutcome === 'MATCH' ||
+          eisOutcome === 'MATCH_FOUND' ||
+          eisMatch === true) {
+        return null;
+      }
+      return DpipScreeningStatusEnum.NO_MATCH;
+    }
+
+    return null;
   }
 
-  // EIS status is informative; approval still uses body.status only.
+  get isNoMatch(): boolean {
+    return this.screeningStatus === DpipScreeningStatusEnum.NO_MATCH;
+  }
+
+  get isMatchFound(): boolean {
+    return this.screeningStatus === DpipScreeningStatusEnum.MATCH;
+  }
+
+  get isApiError(): boolean {
+    return this.screeningStatus === DpipScreeningStatusEnum.API_ERROR;
+  }
+
+  get screeningErrorDescription(): string | null {
+    return this.dpipDetails?.errorDescription?.trim() ||
+      this.eisResponse?.EIS_RESPONSE?.ERROR_DESCRIPTION?.trim() ||
+      null;
+  }
+
+  // EIS details remain informative; the main decision uses body.status.
   get eisScreeningStatus(): string | null {
     return this.eisResponse?.EIS_RESPONSE?.payload?.payload?.status
       ?? null;
@@ -320,14 +382,10 @@ export class DpipScreeningComponent implements OnChanges {
 
   private emitScreeningValidity(): void {
 
-    // Provisional rule: confirm approval policy with the workflow owner.
-    const isValid =
-      this.dpipDetails?.status ===
-        DpipScreeningStatusEnum.NO_MATCH &&
-      !this.dpipDetails?.errorDescription;
-
+    // Only an explicit, non-contradictory NO_MATCH clears DPIP.
+    // Match, API error and unknown statuses remain invalid.
     this.valueChange.emit({
-      valid: isValid
+      valid: this.isNoMatch
     });
   }
 
