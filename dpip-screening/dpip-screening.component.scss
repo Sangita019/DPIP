@@ -16,6 +16,13 @@
   box-sizing: border-box;
 }
 
+/* Only Digital Verification uses the narrower Name Screening-style
+   content column. Keep the existing CBS layout unchanged. */
+.dpip-screening-container.dpip-digital-verification {
+  width: 70%;
+  max-width: 980px;
+}
+
 .dpip-screening-container *,
 .dpip-screening-container *::before,
 .dpip-screening-container *::after {
@@ -172,6 +179,12 @@
   font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+@media (max-width: 991px) {
+  .dpip-screening-container.dpip-digital-verification {
+    width: 100%;
+  }
 }
 
 @media (max-width: 599px) {
