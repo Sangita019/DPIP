@@ -81,8 +81,8 @@ export class DpipScreeningComponent implements OnChanges {
 
   isLoading = false;
   errorMessage = '';
-  // A missing-history response is not an HTTP error. It enables a manual
-  // first-time trigger in editable Digital Verification only.
+  // A missing-history response is not an HTTP error. Initial screening
+  // can be manually triggered in either editable workflow phase.
   noHistoryFound = false;
   isInitialTriggerAvailable = false;
 
@@ -144,8 +144,7 @@ export class DpipScreeningComponent implements OnChanges {
           if (noHistory) {
             this.isLoading = false;
             this.noHistoryFound = true;
-            this.isInitialTriggerAvailable =
-              this.leadPhase === NriLeadPhase.DIGITAL_VERIFICATION;
+            this.isInitialTriggerAvailable = this.isScreeningPhase;
             // No bypass flag can be inferred until a screening response exists.
             // resetScreeningData() has already emitted undefined to the parent.
             return;
@@ -346,17 +345,26 @@ export class DpipScreeningComponent implements OnChanges {
       this.isEditable &&
       !this.isLoading &&
       !!this.leadId &&
-      this.leadPhase === NriLeadPhase.DIGITAL_VERIFICATION
+      this.isScreeningPhase
     );
   }
 
+  // The workflow team confirmed that re-trigger does not depend on the
+  // backend's retriggerAllowed flag. Step permission is still required.
   get canRetrigger(): boolean {
-
     return (
       this.isEditable &&
       !this.isLoading &&
-      this.dpipDetails?.dpipBypassed === false &&
-      this.dpipDetails?.retriggerAllowed === true
+      !!this.leadId &&
+      this.isScreeningPhase &&
+      this.dpipDetails?.dpipBypassed === false
+    );
+  }
+
+  private get isScreeningPhase(): boolean {
+    return (
+      this.leadPhase === NriLeadPhase.DIGITAL_VERIFICATION ||
+      this.leadPhase === NriLeadPhase.CBS_IMPLEMENTATION
     );
   }
 
