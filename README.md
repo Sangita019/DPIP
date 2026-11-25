@@ -16,7 +16,7 @@ This repository contains a reusable Angular DPIP component/service/model for an 
 
 - Reads DPIP history automatically for the selected lead/phase; new screening is **never triggered automatically**.
 - Shows a manual **Trigger DPIP** button for no-history in **editable Digital Verification and CBS Implementation**. It calls the real trigger API; it never triggers automatically.
-- Shows status, timestamp, request identifiers, EIS processing status and EIS screening result when available.
+- Shows screening status, timestamp and request identifiers. Per review feedback, the UI labels **EIS Processing** and **EIS Result** display outer `body.errorDescription` and outer `body.status`, respectively (not nested `EIS_RESPONSE` statuses). Null values display `N/A` and `Pending / unavailable`.
 - Accepts both parsed JSON objects and serialized JSON strings in `body.request` and `body.response` (the actual API screenshots show objects).
 - Displays submitted ID Type/Value in a responsive, horizontally scrollable table.
 - Shows **Re-Trigger DPIP** at top-right once history exists, enabled for editable, non-bypassed leads independently of the response's `retriggerAllowed` field, per the backend team's confirmed requirement. Server-side authorization and duplicate request protection remain essential.
