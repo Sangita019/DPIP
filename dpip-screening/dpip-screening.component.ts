@@ -428,4 +428,9 @@ export class DpipScreeningComponent implements OnChanges {
     );
   }
 
+  // Layout only: CBS Implementation retains the existing shared styling.
+  get isDigitalVerificationPhase(): boolean {
+    return this.leadPhase === NriLeadPhase.DIGITAL_VERIFICATION;
+  }
+
 }
