@@ -74,11 +74,12 @@
   font-weight: 600;
 }
 
-/* Both Digital Verification and CBS place Re-Trigger beside the result.
-   Wrapping avoids overlap when the available width is constrained. */
+/* Keep the screening decision and Re-Trigger on a single row on desktop
+   in both Digital Verification and CBS. The more specific selector overrides
+   the generic .dpip-actions { width: 100% } declared below. */
 .dpip-status-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px 16px;
@@ -87,17 +88,19 @@
 }
 
 .dpip-status-row .dpip-result {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
 }
 
-.dpip-actions-inline {
-  flex: 0 1 auto;
+.dpip-status-row > .dpip-actions-inline {
+  flex: 0 0 auto;
   width: auto;
+  margin-left: auto;
   justify-content: flex-end;
 }
 
-.dpip-actions-inline button {
+.dpip-status-row .dpip-actions-inline button {
+  width: auto;
   white-space: nowrap;
 }
 
@@ -213,6 +216,11 @@
     padding: 12px 0;
   }
 
+  /* Only on narrow screens may the action move below the status. */
+  .dpip-status-row {
+    flex-wrap: wrap;
+  }
+
   .dpip-actions {
     justify-content: flex-start;
   }
@@ -230,12 +238,12 @@
     white-space: normal;
   }
 
-  .dpip-actions-inline {
+  .dpip-status-row > .dpip-actions-inline {
     width: auto;
     justify-content: flex-end;
   }
 
-  .dpip-actions-inline button {
+  .dpip-status-row .dpip-actions-inline button {
     width: auto;
     white-space: normal;
   }
