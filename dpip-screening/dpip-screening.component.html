@@ -12,22 +12,16 @@
       <span>No DPIP screening history found for this lead and phase.</span>
     </div>
 
-    <div class="dpip-actions">
-      @if (isInitialTriggerAvailable) {
+    @if (isInitialTriggerAvailable) {
+      <div class="dpip-actions dpip-actions-top">
         <button type="button" mat-stroked-button color="primary"
           [disabled]="!canTriggerInitially"
           (click)="triggerDpipScreening()">
           <mat-icon>play_arrow</mat-icon>
           Trigger DPIP
         </button>
-      }
-
-      <button type="button" mat-stroked-button
-        (click)="getDpipScreeningHistory()">
-        <mat-icon>refresh</mat-icon>
-        Reload history
-      </button>
-    </div>
+      </div>
+    }
 
     @if (isInitialTriggerAvailable && !isEditable) {
       <p class="action-help">
@@ -45,15 +39,25 @@
       <span>{{ errorMessage }}</span>
     </div>
 
-    <div class="dpip-actions">
+    <div class="dpip-actions dpip-actions-top">
       <button type="button" mat-stroked-button
         (click)="getDpipScreeningHistory()">
         <mat-icon>refresh</mat-icon>
-        Reload history
+        Retry
       </button>
     </div>
 
   } @else if (dpipDetails) {
+    <!-- Align with the top-right Name Screening action, outside panel header. -->
+    <div class="dpip-actions dpip-actions-top">
+      <button type="button" mat-stroked-button color="primary"
+        [disabled]="!canRetrigger"
+        (click)="triggerDpipScreening()">
+        <mat-icon>refresh</mat-icon>
+        Re-Trigger DPIP
+      </button>
+    </div>
+
     <div class="dpip-summary">
       <div class="dpip-result" [class.no-match]="isNoMatch">
         @if (isNoMatch) {
@@ -121,22 +125,8 @@
       <p class="action-help">No screening identifiers available in the DPIP request.</p>
     }
 
-    <div class="dpip-actions">
-      <button type="button" mat-stroked-button color="primary"
-        [disabled]="!canRetrigger"
-        (click)="triggerDpipScreening()">
-        <mat-icon>refresh</mat-icon>
-        Re-Trigger DPIP
-      </button>
-
-      <button type="button" mat-stroked-button
-        (click)="getDpipScreeningHistory()">
-        Reload history
-      </button>
-    </div>
-
     @if (!canRetrigger) {
-      <p class="action-help">
+      <p class="action-help retrigger-help">
         @if (dpipDetails.retriggerAllowed === false) {
           Re-triggering is currently not permitted by the backend.
         } @else if (!isEditable) {
