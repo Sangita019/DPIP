@@ -124,7 +124,7 @@ checkForNameScreeningHistory(): void {
 }
 ```
 
-The current DPIP child does not present an initial Trigger DPIP button for CBS Decision. A Re-Trigger DPIP button is present whenever history exists but is disabled unless the step is editable **and** the backend returns `retriggerAllowed:true` (and bypass is false).
+The current DPIP child does not present an initial Trigger DPIP button for CBS Decision. A Re-Trigger DPIP button is present whenever history exists but is disabled unless the step is editable **and** the backend returns `retriggerAllowed:true` (and bypass is false). The **Re-Trigger DPIP** button is positioned at the top-right of the DPIP content, aligned like the existing Name Screening action. The separate **Reload history** button has been removed from the DPIP UI; **Retry** is retained only for an API error.
 
 ## Data handling changes included in this repository
 
