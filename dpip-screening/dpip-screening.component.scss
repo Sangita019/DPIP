@@ -10,6 +10,8 @@
   gap: 14px;
   padding: 16px 12px;
   width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -117,6 +119,11 @@
   background: #f5f7fa;
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* Keep the request table visually consistent with Name Screening. */
+.dpip-table tbody tr:nth-child(even) {
+  background: #f4f4f4;
 }
 
 .dpip-table th,
