@@ -149,6 +149,10 @@
   margin-bottom: 4px;
 }
 
+.dpip-actions-top button {
+  white-space: nowrap;
+}
+
 .dpip-actions button {
   max-width: 100%;
   white-space: normal;
@@ -182,6 +186,7 @@
 
   .dpip-actions-top button {
     width: auto;
+    white-space: normal;
   }
 
   .dpip-table th,
