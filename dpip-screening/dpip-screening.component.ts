@@ -133,13 +133,19 @@ export class DpipScreeningComponent implements OnChanges {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res: IDpipScreeningResponse) => {
+          // Match both backend history messages:
+          // "No DPIP history found..." and
+          // "No DPIP screening history found...".
+          // Do not treat unrelated successful, body-less replies
+          // as empty history: that could enable duplicate screening.
           const noHistory =
             res.success === true &&
             !res.body &&
             res.messages?.some(
-              message => typeof message === 'string' &&
-                message.toLowerCase().includes('no dpip history found')
-            );
+              message =>
+                typeof message === 'string' &&
+                /no\s+dpip(?:\s+screening)?\s+history\s+found/i.test(message)
+            ) === true;
 
           if (noHistory) {
             this.isLoading = false;
