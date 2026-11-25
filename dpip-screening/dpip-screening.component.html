@@ -25,11 +25,11 @@
 
     @if (isInitialTriggerAvailable && !isEditable) {
       <p class="action-help">
-        Trigger DPIP is available only to users permitted to edit Digital Verification.
+        Trigger DPIP is available only when the current workflow step is editable.
       </p>
     } @else if (!isInitialTriggerAvailable) {
       <p class="action-help">
-        Initial DPIP screening can be triggered only in Digital Verification.
+        Initial DPIP screening is unavailable for this workflow phase.
       </p>
     }
 
@@ -125,13 +125,9 @@
       <p class="action-help">No screening identifiers available in the DPIP request.</p>
     }
 
-    @if (!canRetrigger) {
+    @if (!isEditable) {
       <p class="action-help retrigger-help">
-        @if (dpipDetails.retriggerAllowed === false) {
-          Re-triggering is currently not permitted by the backend.
-        } @else if (!isEditable) {
-          Re-triggering is unavailable in this read-only step.
-        }
+        Re-triggering is unavailable in this read-only step.
       </p>
     }
 
