@@ -20,7 +20,7 @@ This repository contains a reusable Angular DPIP component/service/model for an 
 - Accepts both parsed JSON objects and serialized JSON strings in `body.request` and `body.response` (the actual API screenshots show objects).
 - Displays submitted ID Type/Value in a responsive, horizontally scrollable table.
 - Shows **Re-Trigger DPIP** at top-right once history exists, enabled for editable, non-bypassed leads independently of the response's `retriggerAllowed` field, per the backend team's confirmed requirement. Server-side authorization and duplicate request protection remain essential.
-- Keeps DPIP validity conservative: body.status `NO_MATCH` and no error description (provisional pending business confirmation). A nested EIS outcome is shown for reference, not automatically treated as an approval decision.
+- Handles three DPIP decision categories in the shared component: **MATCH** (including `MATCH_FOUND`), **NO_MATCH** (including `NO_MATCH_FOUND`), and **API_ERROR** (including explicit error/failure variants). Only an uncontradicted `NO_MATCH` with no API/EIS error passes validity. Missing/unknown status remains invalid. Exact backend string values for match/error still need confirmation; sample data only verifies `NO_MATCH`. A nested EIS outcome alone does not clear a missing body.status.
 - Uses a responsive template and SCSS for proper status, table and button spacing.
 
 Actual `digital-verification.component.*` and `cbs-decision.component.*` files are **not in this repository**; follow [integration.md](integration.md) to update them in your DAS Angular application, including closing the Material expansion-panel header **before** inserting the DPIP child.
