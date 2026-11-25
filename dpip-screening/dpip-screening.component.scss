@@ -16,10 +16,10 @@
   box-sizing: border-box;
 }
 
-/* Only Digital Verification uses the narrower Name Screening-style
-   content column. Keep the existing CBS layout unchanged. */
+/* DV uses the full width of its existing centered parent, like Name
+   Screening. Keep CBS layout and all shared dimensions unchanged. */
 .dpip-screening-container.dpip-digital-verification {
-  width: 70%;
+  width: 100%;
   max-width: 980px;
 }
 
@@ -72,6 +72,33 @@
   gap: 8px;
   color: #9a6500;
   font-weight: 600;
+}
+
+/* Only DV places the decision and Re-Trigger action on the same row.
+   Wrapping avoids overlaps when the space is constrained. */
+.dpip-digital-verification .dpip-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.dpip-digital-verification .dpip-status-row .dpip-result {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dpip-digital-verification .dpip-actions-inline {
+  flex: 0 1 auto;
+  width: auto;
+  justify-content: flex-end;
+}
+
+.dpip-digital-verification .dpip-actions-inline button {
+  white-space: nowrap;
 }
 
 .dpip-result.no-match {
@@ -181,12 +208,6 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 991px) {
-  .dpip-screening-container.dpip-digital-verification {
-    width: 100%;
-  }
-}
-
 @media (max-width: 599px) {
   .dpip-screening-container {
     padding: 12px 0;
@@ -205,6 +226,15 @@
   }
 
   .dpip-actions-top button {
+    width: auto;
+    white-space: normal;
+  }
+
+  .dpip-digital-verification .dpip-actions-inline {
+    width: auto;
+  }
+
+  .dpip-digital-verification .dpip-actions-inline button {
     width: auto;
     white-space: normal;
   }
